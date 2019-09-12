@@ -20,10 +20,29 @@ from scout.server.utils import templated, institute_and_case, public_endpoint
 from scout.utils.acmg import get_acmg
 from scout.parse.clinvar import set_submission_objects
 from . import controllers
-from .forms import FiltersForm, SvFiltersForm, StrFiltersForm
+from .forms import FiltersForm, SvFiltersForm, StrFiltersForm, TestFilterForm
 
 log = logging.getLogger(__name__)
 variants_bp = Blueprint('variants', __name__, static_folder='static', template_folder='templates')
+
+@variants_bp.route('/<institute_id>/<case_name>/test_variants', methods=['GET','POST'])
+@templated('variants/test_variants.html')
+def test_variants(institute_id, case_name):
+
+    institute_obj, case_obj = institute_and_case(store, institute_id, case_name)
+    form = TestFilterForm()
+    if form.validate_on_submit():
+        log.info('------> POST!')
+        log.info('FORM IS VALIDATED')
+
+    else:
+        log.info('------> GET!')
+
+
+    return dict(institute=institute_obj, case=case_obj, form=form)
+
+
+
 
 @variants_bp.route('/<institute_id>/<case_name>/variants', methods=['GET','POST'])
 @templated('variants/variants.html')
@@ -187,6 +206,7 @@ def variant(institute_id, case_name, variant_id):
             case_obj, data['variant'])
     data['cancer'] = request.args.get('cancer') == 'yes'
     return dict(institute=institute_obj, case=case_obj, **data)
+
 
 @variants_bp.route('/<institute_id>/<case_name>/str/variants')
 @templated('variants/str-variants.html')

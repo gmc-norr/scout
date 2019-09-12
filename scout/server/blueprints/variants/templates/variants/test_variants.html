@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+<form method='POST' action="{{url_for('variants.test_variants', institute_id=institute._id, case_name=case.display_name)}}">
+  {{ form.csrf_token }}
+  {{ wtf.form_field(form.chrom) }}
+  {{ wtf.form_field(form.start) }}
+  {{ wtf.form_field(form.stop) }}
+  <button name="page" type="submit" class="btn btn-default">submit</button>
+</form>
+
+
+{% endblock %}

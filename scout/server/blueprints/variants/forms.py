@@ -3,8 +3,9 @@ import decimal
 
 from flask_wtf import FlaskForm
 from wtforms import (BooleanField, DecimalField, Field, TextField, SelectMultipleField,
-                     HiddenField, IntegerField, SubmitField)
+                     HiddenField, IntegerField, SubmitField, validators)
 from wtforms.widgets import TextInput
+from wtforms.validators import ValidationError, DataRequired
 from flask_wtf.file import FileField
 
 from scout.constants import (CLINSIG_MAP, FEATURE_TYPES, GENETIC_MODELS, SO_TERMS,
@@ -47,6 +48,60 @@ class BetterDecimalField(DecimalField):
                 raise ValueError(self.gettext('Not a valid decimal value'))
 
 
+class TestFilterForm(FlaskForm):
+    variant_type = HiddenField(default='clinical')
+    gene_panels = SelectMultipleField(choices=[])
+    hgnc_symbols = TagListField('HGNC Symbols/Ids (case sensitive)')
+
+    symbol_file = FileField('Symbol File')
+
+    region_annotations = SelectMultipleField(choices=REGION_ANNOTATIONS)
+    functional_annotations = SelectMultipleField(choices=FUNC_ANNOTATIONS)
+    genetic_models = SelectMultipleField(choices=GENETIC_MODELS)
+
+    cadd_score = BetterDecimalField('CADD', places=2)
+    cadd_inclusive = BooleanField('CADD inclusive')
+    clinsig = SelectMultipleField('CLINSIG', choices=CLINSIG_OPTIONS)
+    clinsig_confident_always_returned = BooleanField('CLINSIG Confident')
+    spidex_human = SelectMultipleField('SPIDEX', choices=SPIDEX_CHOICES)
+
+    gnomad_frequency = BetterDecimalField('gnomadAF', places=2)
+    chrom = TextField('Chromosome', [validators.Optional()])
+    start = IntegerField('Start position', [validators.Optional(), IntegerField])
+    stop = IntegerField('Stop position', [validators.Optional(), IntegerField])
+    local_obs = IntegerField('Local obs. (archive)')
+
+    filter_variants = SubmitField(label='Filter variants')
+    clinical_filter = SubmitField(label='Clinical filter')
+    export = SubmitField(label='Filter and export')
+
+    def validate(self):
+        # validate chromosome value if available:
+        chr = self.chrom.data
+        valid_chroms = [ str(chr) for chr in range(1,22) ] + ['X', 'Y', 'MT']
+        if chr and not chr in valid_chroms:
+            self.chrom.errors += ('Chromosome field is not valid',)
+            return False
+
+        # Availability of chrom coordinates
+        coords = [bool(self.start.data), bool(self.stop.data)]
+        if True in coords: # if at least a chrom coordinate is present:
+            if not chr:
+                self.chrom.errors += ('Chromosome should be provided along with coordinates',)
+                return False
+            if False in coords:
+                message = 'Provide both chromosome coordinates'
+                if coords[0] is False:
+                    self.start.errors += (message,)
+                else:
+                    self.stop.errors += (message,)
+                return False
+            if self.stop.data < self.start.data:
+                self.stop.errors += ('Stop coordinate should be greater than start coordinate',)
+                return False
+
+        return True
+
 class FiltersForm(FlaskForm):
     """Base FiltersForm for SNVs"""
     variant_type = HiddenField(default='clinical')
@@ -67,6 +122,8 @@ class FiltersForm(FlaskForm):
 
     gnomad_frequency = BetterDecimalField('gnomadAF', places=2)
     chrom = TextField('Chromosome')
+    start = IntegerField('Start position')
+    stop = IntegerField('Stop position')
     local_obs = IntegerField('Local obs. (archive)')
 
     filter_variants = SubmitField(label='Filter variants')
