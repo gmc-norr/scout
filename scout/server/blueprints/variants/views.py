@@ -20,7 +20,7 @@ from scout.server.utils import templated, institute_and_case, public_endpoint
 from scout.utils.acmg import get_acmg
 from scout.parse.clinvar import set_submission_objects
 from . import controllers
-from .forms import FiltersForm, SvFiltersForm, StrFiltersForm, CancerFiltersForm
+from .forms import FiltersForm, SvFiltersForm, StrFiltersForm, CancerFiltersForm, TestFilterForm
 
 log = logging.getLogger(__name__)
 variants_bp = Blueprint('variants', __name__, static_folder='static', template_folder='templates')
@@ -78,6 +78,13 @@ def variants(institute_id, case_name):
             form.csrf_token = request.args.get('csrf_token')
         else:
             form = FiltersForm(request.form)
+
+        if form.validate_on_submit():
+            flash('Validated!')
+        else:
+            flash("not validated!")
+            return redirect(request.referrer)
+
     else:
         form = FiltersForm(request.args)
 
