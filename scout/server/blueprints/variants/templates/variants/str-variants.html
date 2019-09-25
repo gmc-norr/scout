@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "layout_bs4.html" %}
 {% from "variants/utils.html" import compounds_table %}
 {% from "variants/components.html" import gene_cell, frequency_cell %}
 {% from "utils.html" import flash_messages, comments_table %}
@@ -9,20 +9,20 @@
 
 {% block top_nav %}
   {{ super() }}
-  <li>
-    <a href="{{ url_for('cases.index') }}">Institutes</a>
+  <li class="nav-item">
+    <a class="nav-link text-nowrap" href="{{ url_for('cases.index') }}">Institutes</a>
   </li>
-  <li>
-    <a href="{{ url_for('cases.cases', institute_id=institute._id) }}">
+  <li class="nav-item">
+    <a class="nav-link text-nowrap" href="{{ url_for('cases.cases', institute_id=institute._id) }}">
       {{ institute.display_name }}
     </a>
   </li>
-  <li>
-    <a href="{{ url_for('cases.case', institute_id=institute._id, case_name=case.display_name) }}">
+  <li class="nav-item">
+    <a class="nav-link text-nowrap" href="{{ url_for('cases.case', institute_id=institute._id, case_name=case.display_name) }}">
       {{ case.display_name }}
     </a>
   </li>
-  <li class="active">
+  <li class="nav-item active">
     <span class="navbar-text">{{ form.variant_type.data|capitalize }} STRs</span>
   </li>
 {% endblock %}
@@ -31,12 +31,12 @@
   {{ super() }}
 {% endblock %}
 
-{% block content %}
+{% block content_main %}
 <form>
-  <div class="container-fluid main">
+  <div class="container-float">
     {{ flash_messages() }}
   </div>
-  <div class="table-responsive">
+  <div class="card mt-3">
     <table class="table table-bordered table-hover">
       <thead>
         <tr>
@@ -94,9 +94,8 @@
         {% endfor %}
       </tbody>
     </table>
-
-    {{ footer() }}
   </div>
+  {{ footer() }}
 </form>
 {% endblock %}
 
@@ -111,17 +110,21 @@
     <span class="badge pull-right" title="Manual rank">{{ variant.manual_rank }}</span>
   {% endif %}
   {% if comment_count > 0 %}
+    {% set comments_content = comments_table(institute, case, variant.comments, variant._id) %}
     <a href="#"
        class="badge pull-right"
        data-toggle="popover"
        data-placement="right"
        data-html="true"
        data-trigger="hover click"
-       data-content="{{ comments_table(institute, case, variant.comments, variant._id) }}"
+       data-content="{{ comments_content }}"
        title=""
        >
       {{ comment_count }}
-      <span class="glyphicon glyphicon-comment"></span>
+      <i class="fa fa-comment"></i>
+      {% if 'GLOBAL' in comments_content %}
+        <i class="fa fa-globe" aria-hidden="true"></i>
+      {% endif %}
     </a>
   {% endif %}
 {% endmacro %}
@@ -144,7 +147,6 @@
   {{ super() }}
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-table-headers/0.1.19/js/jquery.stickytableheaders.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/js/bootstrap-multiselect.min.js"></script>
   <script>
     $(function () {
       $('[data-toggle="tooltip"]').tooltip();
@@ -160,25 +162,6 @@
         buttonWidth: '100%'
       });
     })
-
-    function add_export(){
-      var the_form = document.forms['filters_form'];
-      var hidden_export = document.createElement('input');
-
-      hidden_export.type = 'hidden';
-      hidden_export.name = 'export';
-      hidden_export.value = 'True';
-      hidden_export.id = 'export';
-      the_form.appendChild(hidden_export);
-      the_form.submit();
-    }
-
-    function remove_export(){
-      var the_form = document.forms['filters_form'];
-      var hidden_export = document.getElementById('export');
-      the_form.removeChild(hidden_export);
-      the_form.submit();
-    }
 
   </script>
 {% endblock %}

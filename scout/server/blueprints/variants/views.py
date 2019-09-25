@@ -20,7 +20,7 @@ from scout.server.utils import templated, institute_and_case, public_endpoint
 from scout.utils.acmg import get_acmg
 from scout.parse.clinvar import set_submission_objects
 from . import controllers
-from .forms import FiltersForm, SvFiltersForm, StrFiltersForm, TestFilterForm
+from .forms import FiltersForm, SvFiltersForm, StrFiltersForm, CancerFiltersForm
 
 log = logging.getLogger(__name__)
 variants_bp = Blueprint('variants', __name__, static_folder='static', template_folder='templates')
@@ -60,7 +60,6 @@ def variants(institute_id, case_name):
         if panel.get('is_default'):
             default_panels.append(panel['panel_name'])
 
-    request.form.get('gene_panels')
     if bool(request.form.get('clinical_filter')):
         clinical_filter = MultiDict({
             'variant_type': 'clinical',
@@ -134,7 +133,7 @@ def variants(institute_id, case_name):
                     not_found_ids.append(hgnc_symbol)
                 else:
                     hgnc_symbols.append(hgnc_gene['hgnc_symbol'])
-            elif store.hgnc_genes(hgnc_symbol).count() == 0:
+            elif sum(1 for i in store.hgnc_genes(hgnc_symbol)) == 0:
                   not_found_symbols.append(hgnc_symbol)
             elif is_clinical and (hgnc_symbol not in clinical_symbols):
                  non_clinical_symbols.append(hgnc_symbol)
@@ -292,7 +291,7 @@ def sv_variants(institute_id, case_name):
                     not_found_ids.append(hgnc_symbol)
                 else:
                     hgnc_symbols.append(hgnc_gene['hgnc_symbol'])
-            elif store.hgnc_genes(hgnc_symbol).count() == 0:
+            elif sum(1 for i in store.hgnc_genes(hgnc_symbol)) == 0:
                   not_found_symbols.append(hgnc_symbol)
             elif is_clinical and (hgnc_symbol not in clinical_symbols):
                  non_clinical_symbols.append(hgnc_symbol)
@@ -465,7 +464,8 @@ def clinvar(institute_id, case_name, variant_id):
 @templated('variants/cancer-variants.html')
 def cancer_variants(institute_id, case_name):
     """Show cancer variants overview."""
-    data = controllers.cancer_variants(store, request.args, institute_id, case_name)
+    form = CancerFiltersForm(request.args)
+    data = controllers.cancer_variants(store, request.args, institute_id, case_name, form)
     return data
 
 

@@ -22,7 +22,6 @@ from scout.constants.variants_export import EXPORT_HEADER, VERIFIED_VARIANTS_HEA
 from scout.export.variant import export_verified_variants
 from scout.server.utils import institute_and_case, user_institutes
 from scout.server.links import (add_gene_links, ensembl, add_tx_links)
-from .forms import CancerFiltersForm
 from scout.server.blueprints.genes.controllers import gene
 from scout.utils.requests import fetch_refseq_version
 
@@ -48,6 +47,14 @@ def variants(store, institute_obj, case_obj, variants_query, page=1, per_page=50
     for variant_obj in variant_res:
         overlapping_svs = [sv for sv in store.overlapping(variant_obj)]
         variant_obj['overlapping'] = overlapping_svs or None
+
+        # Get all previous ACMG evalautions of the variant
+        evaluations = []
+        for evaluation_obj in store.get_evaluations(variant_obj):
+            evaluation_obj['classification'] = ACMG_COMPLETE_MAP[evaluation_obj['classification']]
+            evaluations.append(evaluation_obj)
+        variant_obj['evaluations'] = evaluations
+
         variants.append(parse_variant(store, institute_obj, case_obj, variant_obj,
                         update=True, genome_build=genome_build))
 
@@ -1086,10 +1093,9 @@ def verification_email_body(case_name, url, display_name, category, subcategory,
     return html
 
 
-def cancer_variants(store, request_args, institute_id, case_name):
+def cancer_variants(store, request_args, institute_id, case_name, form):
     """Fetch data related to cancer variants for a case."""
     institute_obj, case_obj = institute_and_case(store, institute_id, case_name)
-    form = CancerFiltersForm(request_args)
     variants_query = store.variants(case_obj['_id'], category='cancer', query=form.data).limit(50)
     data = dict(
         institute=institute_obj,
