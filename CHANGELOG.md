@@ -8,7 +8,28 @@ About changelog [here](https://keepachangelog.com/en/1.0.0/)
 ## [x.x.x]
 
 ### Added
+- Updated Scout to use Bootstrap 4.3
+- New looks for Scout
+- Improved dashboard using Chart.js
+- Ask before inactivating a case where last assigned user leaves it
+- Genes can be manually added to the dynamic gene list directly on the case page
+- Dynanmic gene panels can optionally be used with clinical filter, instead of default gene panel
+- Dynamic gene panels get link out to chanjo-report for coverage report
+- Load all clinvar variants with clinvar Pathogenic, Likely Pathogenic and Conflicting pathogenic
+- Show transcripts with exon numbers for structural variants
+- Case sort order can now be toggled between ascending and descending.
+
 ### fixed
+- Fixed missing import for variants with comments
+- Instructions on how to build docs
+- Keep sanger order + verification when updating/reloading variants
+- Fixed and moved broken filter actions (HPO gene panel and reset filter)
+- Fixed string conversion to number
+- UCSC links for structural variants are now separated per breakpoint (and whole variant where applicable)
+- Reintroduced missing coverage report
+- Fixed a bug preventing loading samples using the command line
+- Better inheritance models customization for genes in gene panels
+
 
 ## [4.7.3]
 
