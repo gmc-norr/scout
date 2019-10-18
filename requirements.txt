@@ -43,3 +43,9 @@ python-dateutil
 
 # Required by scripts
 tabulate
+
+# extras
+gunicorn==19.9.0
+scout-browser==4.4.1
+pyopenssl
+
