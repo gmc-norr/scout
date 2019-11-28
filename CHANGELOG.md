@@ -4,13 +4,19 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 About changelog [here](https://keepachangelog.com/en/1.0.0/)
 
+
 ## [x.x.x]
 
 ### Added
-
+- Rank score model in causatives page
+- Exportable HPO terms from phenotypes page
+- AMP guideline tiers for cancer variants
+- Adds scroll for the trancript tab 
 
 ### Fixed
 - Fixed update OMIM command bug due to change in the header of the genemap2 file
+- Removed Mosaic Tag from Cancer variants
+- Fixes issue with unaligned table headers that comes with hidden Datatables
 
 
 ## [4.9.0]
@@ -39,6 +45,7 @@ About changelog [here](https://keepachangelog.com/en/1.0.0/)
 
 ### Fixed
 - Bug when ordering sanger
+- Improved scrolling over long list of genes/transcripts
 
 
 ## [4.8.2]
