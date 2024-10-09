@@ -4,9 +4,12 @@ import io
 import logging
 
 import pymongo
-from flask import Blueprint, flash, redirect, request, session, url_for
+from flask import Blueprint, flash, redirect, request, session, url_for, render_template
 from flask_login import current_user
 from markupsafe import Markup
+import requests
+import pandas as pd
+from io import StringIO
 
 from scout.constants import (
     CANCER_SPECIFIC_VARIANT_DISMISS_OPTIONS,
@@ -786,3 +789,25 @@ def unaudit_filter():
         audit_id=request.args.get("audit_id"), user_obj=store.user(current_user.email)
     )
     return redirect(request.referrer)
+
+
+@variants_bp.route("/civic_variants", methods=["GET", "POST"])
+@templated("variants/civic-variants.html")
+def download_civic_data(
+    url="https://civicdb.org/downloads/01-Oct-2024/01-Oct-2024-VariantSummaries.tsv",
+):
+    try:
+        response = requests.get(url)
+
+        response.raise_for_status()
+
+        data = pd.read_csv(StringIO(response.text), sep="\t")
+
+        variants = data.to_dict("records")
+
+        # return render_template('variants/civic-variants.html', variants=variants)
+        return variants
+
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred while downloading the data: {e}")
+        return None

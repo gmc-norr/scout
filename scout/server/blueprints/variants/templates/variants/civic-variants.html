@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+{% from "variants/utils.html" import pagination_footer, pagination_hidden_div %}
+{% block title %}
+{{ super() }} - All variants in CIViC}
+{% endblock %}
+
+
+{% block content %}
+<h1>Variants in CIViC</h1>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Variant</th>
+                <th>Gene</th>
+                <th>Chromosome</th>
+                <th>HGVS Descriptions</th>
+                <th>ClinVar IDs</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for variant in variants %}
+            <tr>
+                <td>{{ variant.variant }}</td>
+                <td>{{ variant.gene }}</td>
+                <td>{{ variant.chromosome }}</td>
+                <td>{{ variant.hgvs_descriptions }}...</td>
+                <td>{{ variant.clinvar_ids }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}
