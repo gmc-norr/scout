@@ -1,0 +1,87 @@
+{% extends "layout.html" %}
+{% from "variants/utils.html" import pagination_footer, pagination_hidden_div %}
+
+{% block title %}
+    {{ super() }} - CIViC Variants
+{% endblock %}
+
+{% block content %}
+    <h1>CIViC Variants</h1>
+    
+    <form method="GET" action="{{ url_for('variants.civic_variants') }}">
+        <input type="text" name="query" value="{{ query }}" placeholder="Search variants">
+        
+        <select name="gene">
+            <option value="">Filter by Gene</option>
+            {% for a_gene in all_genes %}
+                <option value="{{ a_gene }}" {% if gene == a_gene %}selected{% endif %}>{{ a_gene }}</option>
+            {% endfor %}
+        </select>
+        <select name="variant">
+            <option value="">All Variants</option>
+            {% for var in all_variants %}
+                <option value="{{ var }}" {% if variant == var %}selected{% endif %}>{{ var }}</option>
+            {% endfor %}
+        </select>
+        <select name="variant_aliases">
+            <option value="">All Variant Aliases</option>
+            {% for alias in all_variant_aliases %}
+                <option value="{{ alias }}" {% if variant_alias == alias %}selected{% endif %}>{{ alias }}</option>
+            {% endfor %}
+        </select>
+        <select name="variant_type">
+            <option value="">All Variant Types</option>
+            {% for type in all_variant_types %}
+                <option value="{{ type }}" {% if variant_type == type %}selected{% endif %}>{{ type }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Search</button>
+     
+    
+
+    
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Variant ID</th>
+                <th>Gene</th>
+                <th>Variant</th>
+                <th>Variant Aliases</th>
+                <th>Variant Types</th>
+                <th>Chromosome</th>
+                <th>Position</th>
+                <th>HGVS Descriptions</th>
+                <th>Last Review Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for variant in variants %}
+                <tr>
+                    <td>{{ variant.variant_id }}</td>
+                    <td>{{ variant.gene }}</td>
+                    <td>{{ variant.variant }}</td>
+                    <td>{{ variant.variant_aliases }}</td>
+                    <td>{{ variant.variant_types }}</td>
+                    <td>{{ variant.chromosome }}</td>
+                    <td>{{ variant.start }}-{{ variant.stop }}</td>
+                    <td>{{ variant.hgvs_descriptions }} </td>
+                    <td>{{ variant.last_review_date }}</td>
+                    <td>
+                        <a href="{{ variant.variant_civic_url }}" target="_blank">View in CIViC</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+        {{ pagination_hidden_div(page) }}
+    </form>
+    <div class="container-fluid" style="padding-bottom: 100px">
+        {{ pagination_footer(more_variants, page) }}
+    </div>
+    </table>
+    <div class="container-fluid" style="padding-bottom: 100px">
+        {{ pagination_footer(more_variants, page) }}
+    </div>
+
+{% endblock %}

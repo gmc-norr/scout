@@ -46,6 +46,7 @@ def setup_scout(
     api_key=None,
     demo=False,
     resource_files=None,
+    civic_variants=None,
 ):
     """Function to setup a working scout instance.
 
@@ -222,6 +223,42 @@ def setup_scout(
     LOG.info("Creating indexes")
     adapter.load_indexes()
     LOG.info("Scout instance setup successful")
+
+    if civic_variants is not None:
+        LOG.info("Adding CIViC variants to the database")
+        for variant in civic_variants:
+            variant_data = {
+                "variant_id": variant.get("variant_id"),
+                "variant_civic_url": variant.get("variant_civic_url"),
+                "gene": variant.get("gene"),
+                "entrez_id": variant.get("entrez_id"),
+                "variant": variant.get("variant"),
+                "variant_groups": variant.get("variants_groups"),
+                "chromosome": variant.get("chromosome"),
+                "start": variant.get("start"),
+                "stop": variant.get("stop"),
+                "reference_bases": variant.get("reference_bases"),
+                "variant_bases": variant.get("variant_bases"),
+                "representative_transcript": variant.get("representative_transcript"),
+                "ensembl_version": variant.get("ensembl_version"),
+                "reference_build": variant.get("reference_build"),
+                "chromosome2": variant.get("chromosome2"),
+                "start2": variant.get("start2"),
+                "stop2": variant.get("stop2"),
+                "representative_transcript2": variant.get("representative_transcript2"),
+                "variant_types": variant.get("variant_types"),
+                "hgvs_descriptions": variant.get("hgvs_descriptions"),
+                "last_review_date": variant.get("last_review_date"),
+                "allele_registry_id": variant.get("allele_registry_id"),
+                "clinvar_ids": variant.get("clinvar_ids"),
+                "variant_aliases": variant.get("variant_aliases"),
+                "is_flagged": variant.get("is_flagged"),
+                "single_variant_molecular_profile_id": variant.get(
+                    "single_variant_molecular_profile_id"
+                ),
+            }
+            adapter.add_civic_variant(variant_data)
+        LOG.info(f"Added {len(civic_variants)} CIViC variants to the database")
 
 
 def load_demo_panel(adapter):

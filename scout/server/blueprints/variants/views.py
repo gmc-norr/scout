@@ -2,11 +2,15 @@
 
 import io
 import logging
+import requests
+import pandas as pd
+from io import StringIO
 
 import pymongo
 from flask import Blueprint, flash, redirect, request, session, url_for
 from flask_login import current_user
 from markupsafe import Markup
+from typing import List, Dict, Any
 
 from scout.constants import (
     CANCER_SPECIFIC_VARIANT_DISMISS_OPTIONS,
@@ -786,3 +790,67 @@ def unaudit_filter():
         audit_id=request.args.get("audit_id"), user_obj=store.user(current_user.email)
     )
     return redirect(request.referrer)
+
+
+@variants_bp.route("/civic_variants", methods=["GET"])
+@templated("variants/civic-variants.html")
+def civic_variants():
+    """Get CIViC data"""
+
+    # Get query parameters
+    query = request.args.get("query", "")
+    gene = request.args.get("gene", "")
+    variant = request.args.get("variant")
+    variant_aliases = request.args.get("variant_aliases", "")
+    variant_type = request.args.get("variant_type", "")
+    page = int(request.args.get("page", 1))
+    per_page = 5
+
+    # Build the MongoDB query
+    mongo_query: Dict[str, Any] = {}
+    if query:
+        mongo_query["$or"] = [
+            {"gene": {"$regex": query, "$options": "i"}},
+            {"variant": {"$regex": query, "$options": "i"}},
+            {"variant_groups": {"$regex": query, "$options": "i"}},
+            {"hgvs_descriptions": {"$elemMatch": {"$regex": query, "$options": "i"}}},
+        ]
+    if gene:
+        mongo_query["gene"] = gene
+    if variant:
+        mongo_query["variant"] = variant
+    if variant_aliases:
+        mongo_query["variant_aliases"] = variant_aliases
+    if variant_type:
+        mongo_query["variant_types"] = variant_type
+
+    skip = (page - 1) * per_page
+    variants = list(store.civic_collection.find(mongo_query).skip(skip).limit(per_page))
+    total_variants = store.civic_collection.count_documents(mongo_query)
+    variants_list: List[Dict[str, Any]] = list(variants)
+    more_variants = True if total_variants > (skip + per_page) else False
+
+    # Get unique variants and variant types for filtering
+    all_genes = store.civic_collection.distinct("gene")
+    all_variants = store.civic_collection.distinct("variant")
+    all_variant_aliases = store.civic_collection.distinct("variant_aliases")
+    all_variant_types = store.civic_collection.distinct("variant_types")
+
+    data = {
+        "variants": variants_list,
+        "total_variants": total_variants,
+        "more_variants": more_variants,
+        "page": page,
+        "per_page": per_page,
+        "query": query,
+        "gene": gene,
+        "all_genes": all_genes,
+        "variant": variant,
+        "variant_aliases": variant_aliases,
+        "variant_type": variant_type,
+        "all_variants": all_variants,
+        "all_variant_aliases": all_variant_aliases,
+        "all_variant_types": all_variant_types,
+    }
+
+    return data
