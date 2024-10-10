@@ -786,3 +786,99 @@ def unaudit_filter():
         audit_id=request.args.get("audit_id"), user_obj=store.user(current_user.email)
     )
     return redirect(request.referrer)
+
+
+@variants_bp.route("/<institute_id>/<case_name>/all_variants", methods=["GET", "POST"])
+@templated("variants/all-variants.html")
+def all_variants(institute_id, case_name):
+    """Display a list of all variants."""
+    page = controllers.get_variants_page(request.form)
+    category = {"$in": ["sv", "str", "snv", "mei"]}
+    institute_obj, case_obj = institute_and_case(store, institute_id, case_name)
+    variant_type = Markup.escape(
+        request.args.get("variant_type", request.form.get("variant_type", "clinical"))
+    )
+    if variant_type not in ["clinical", "research"]:
+        variant_type = "clinical"
+
+    variants_stats = store.case_variants_count(case_obj["_id"], institute_id, variant_type, False)
+    if request.form.get("hpo_clinical_filter"):
+        case_obj["hpo_clinical_filter"] = True
+
+    user_obj = store.user(current_user.email)
+    if request.method == "POST":
+        if "dismiss_submit" in request.form:  # dismiss a list of variants
+            controllers.dismiss_variant_list(
+                store,
+                institute_obj,
+                case_obj,
+                request.form.getlist("dismiss"),
+                request.form.getlist("dismiss_choices"),
+            )
+
+        form = controllers.populate_filters_form(
+            store, institute_obj, case_obj, user_obj, category["$in"][0], request.form
+        )
+    else:
+        form = FiltersForm(request.args)
+        # set form variant data type the first time around
+        form.variant_type.data = variant_type
+        # set chromosome to all chromosomes
+        form.chrom.data = request.args.get("chrom", "")
+
+        if form.gene_panels.data == [] and variant_type == "clinical":
+            form.gene_panels.data = controllers.case_default_panels(case_obj)
+
+    controllers.populate_force_show_unaffected_vars(institute_obj, form)
+
+    # populate filters dropdown
+    available_filters = list(store.filters(institute_id, category))
+    form.filters.choices = [
+        (filter.get("_id"), filter.get("display_name")) for filter in available_filters
+    ]
+    # Populate chromosome select choices
+    controllers.populate_chrom_choices(form, case_obj)
+
+    # populate available panel choices
+    form.gene_panels.choices = controllers.gene_panel_choices(store, institute_obj, case_obj)
+
+    # update status of case if visited for the first time
+    controllers.activate_case(store, institute_obj, case_obj, current_user)
+
+    controllers.update_form_hgnc_symbols(store, case_obj, form)
+
+    genome_build = "38" if "38" in str(case_obj.get("genome_build", "37")) else "37"
+
+    variants_query = store.variants(
+        case_obj["_id"],
+        query=form.data,
+        category=category,
+        build=genome_build,
+    )
+
+    result_size = store.count_variants(
+        case_obj["_id"], form.data, None, category, build=genome_build
+    )
+
+    for cat in category["$in"]:
+        total_variants = variants_stats.get(variant_type, {}).get(cat, "NA")
+
+    data = controllers.variants(
+        store,
+        institute_obj,
+        case_obj,
+        variants_query,
+        result_size,
+        page,
+        query_form=form.data,
+    )
+
+    return dict(
+        case=case_obj,
+        form=form,
+        institute=institute_obj,
+        page=page,
+        result_size=result_size,
+        total_variants=total_variants,
+        **data,
+    )

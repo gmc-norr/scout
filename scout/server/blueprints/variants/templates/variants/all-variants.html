@@ -1,0 +1,114 @@
+{% extends "layout.html" %}
+{% from "variants/utils.html" import pagination_footer, pagination_hidden_div %}
+{% block title %}
+{{ super() }} - All variants for {{ case.display_name }}
+{% endblock %}
+
+
+{% block content %}
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <h1>Tumor Types</h1>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        .tree {
+            margin-left: 20px;
+        }
+        .tree label {
+            cursor: pointer;
+        }
+        .tree input[type="checkbox"] {
+            margin-right: 5px;
+        }
+        .tree ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+        .tree li {
+            margin: 5px 0;
+        }
+        .toggle {
+            cursor: pointer;
+            user-select: none;
+        }
+        .toggle::before {
+            content: '\25B6';
+            color: black;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        .toggle-down::before {
+            transform: rotate(90deg);
+        }
+        .nested {
+            display: none;
+        }
+        .active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="tree" class="tree"></div>
+    <script src="{{ url_for('variants.static', filename='tree_data_script.js') }}"> </script>
+</body>
+</html>
+
+
+<p>&nbsp</p>
+<h1>All Variants for Case {{ case.display_name }}</h1>
+<form id="variantForm" method="POST"
+        action="{{ url_for('variants.all_variants', institute_id=case.owner, case_name=case.display_name) }}">
+<table class="table table-bordered">
+  <thead>
+  <tr>
+    <th></th>
+    <th>Display Name</th>
+    <th>Category</th>
+    <th>Rank Score</th>
+    <th>Variant Rank</th>
+    <th>Cadd Score</th>
+    <th>HGNC Symbols</th>
+  </tr>
+  </thead>
+  <tbody id="variantTableBody">
+    {% for variant in variants %}
+    <tr>
+      <td><input type="checkbox" value="{{variant.display_name}}, {{variant.category}}" name="display_name"></td>
+      <td>{{ variant.display_name }}</td>
+      <td>{{ variant.end }}</td>
+      <td>{{ variant.length }}</td>
+      <td>{{ variant.sub_category }}</td>
+      <td>{{ variant.rank_score }}</td>
+      <td>{{ variant.variant_rank }}</td>
+      <td>{{ variant.cadd_score }}</td>
+      <td>{{ variant.hgnc_symbols }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+    <button id="toggleButton" type="button">Check all</button>
+    <button id="exportButton_vcf" type="button">Export Variants</button>
+    {{ pagination_hidden_div(page) }}
+    <div class="col 4 d-flex justify-content-center">
+      Filter returns {{result_size}} / {{ total_variants }} variants.
+    </div>
+  </form>
+</table>
+
+<div class="container-fluid" style="padding-bottom: 100px">
+  {{ pagination_footer(more_variants, page) }}
+</div>
+
+<script src="{{ url_for('variants.static', filename='toggle_script.js') }}"></script>
+
+<script src="{{ url_for('variants.static', filename='export_script.js') }}"></script>
+
+{% endblock %}
