@@ -130,6 +130,7 @@ COLLECTIONS = [
     "disease_term",
     "variant",
     "acmg",
+    "ccv",
 ]
 
 BUILDS = ["37", "38", "GRCh38"]
